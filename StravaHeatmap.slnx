@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StravaHeatmap.Api/StravaHeatmap.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StravaHeatmap.Tests/StravaHeatmap.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,6 @@
+@StravaHeatmap.Api_HostAddress = http://localhost:5260
+
+GET {{StravaHeatmap.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
