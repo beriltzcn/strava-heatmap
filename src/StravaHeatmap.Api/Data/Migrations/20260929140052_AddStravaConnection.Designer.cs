@@ -11,7 +11,7 @@ using StravaHeatmap.Api.Data;
 namespace StravaHeatmap.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260929135454_AddStravaConnection")]
+    [Migration("20260929140052_AddStravaConnection")]
     partial class AddStravaConnection
     {
         /// <inheritdoc />
@@ -30,7 +30,7 @@ namespace StravaHeatmap.Api.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("AthletId")
+                    b.Property<long>("AthleteId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("AthleteName")
@@ -51,7 +51,7 @@ namespace StravaHeatmap.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AthletId")
+                    b.HasIndex("AthleteId")
                         .IsUnique();
 
                     b.ToTable("StravaConnections");

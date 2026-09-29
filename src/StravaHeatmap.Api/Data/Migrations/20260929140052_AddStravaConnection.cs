@@ -17,7 +17,7 @@ namespace StravaHeatmap.Api.Data.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    AthletId = table.Column<long>(type: "INTEGER", nullable: false),
+                    AthleteId = table.Column<long>(type: "INTEGER", nullable: false),
                     AthleteName = table.Column<string>(type: "TEXT", nullable: true),
                     AccessToken = table.Column<string>(type: "TEXT", nullable: false),
                     RefreshToken = table.Column<string>(type: "TEXT", nullable: false),
@@ -31,9 +31,9 @@ namespace StravaHeatmap.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StravaConnections_AthletId",
+                name: "IX_StravaConnections_AthleteId",
                 table: "StravaConnections",
-                column: "AthletId",
+                column: "AthleteId",
                 unique: true);
         }
 

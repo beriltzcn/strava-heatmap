@@ -27,7 +27,7 @@ namespace StravaHeatmap.Api.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("AthletId")
+                    b.Property<long>("AthleteId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("AthleteName")
@@ -48,7 +48,7 @@ namespace StravaHeatmap.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AthletId")
+                    b.HasIndex("AthleteId")
                         .IsUnique();
 
                     b.ToTable("StravaConnections");

@@ -3,7 +3,7 @@
 public class StravaConnection
 {
     public int Id { get; set; }
-    public long AthletId { get; set; }
+    public long AthleteId { get; set; }
     
     public string? AthleteName { get; set; }
 

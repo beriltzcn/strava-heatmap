@@ -15,7 +15,7 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<StravaConnection>()
-            .HasIndex(c => c.AthletId)
+            .HasIndex(c => c.AthleteId)
             .IsUnique();
     }
 
