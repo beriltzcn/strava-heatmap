@@ -32,6 +32,7 @@ builder.Services.AddHttpClient<StravaApiService>(client =>
 
 // Bağlantı ve token yönetimi.
 builder.Services.AddScoped<StravaConnectionService>();
+builder.Services.AddScoped<StravaSyncService>();
 
 // Oturum: OAuth state değerini kısa süreliğine sunucu tarafında tutmak için.
 // Veri sunucuda kalır, tarayıcıya sadece bir çerez kimliği gider.

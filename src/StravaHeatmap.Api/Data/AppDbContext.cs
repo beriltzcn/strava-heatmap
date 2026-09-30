@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     {
     }
     public DbSet<StravaConnection> StravaConnections => Set<StravaConnection>();
+    public DbSet<Activity> Activities => Set<Activity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,6 +18,18 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<StravaConnection>()
             .HasIndex(c => c.AthleteId)
             .IsUnique();
+
+        // Ayni Strava aktivitesi iki kez kaydedilmesin.
+        modelBuilder.Entity<Activity>()
+            .HasIndex(a => a.StravaActivityId)
+            .IsUnique();
+
+        // Bir baglanti silinirse aktiviteleri de silinsin.
+        modelBuilder.Entity<Activity>()
+            .HasOne(a => a.Connection)
+            .WithMany()
+            .HasForeignKey(a => a.StravaConnectionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
 }

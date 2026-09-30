@@ -16,17 +16,20 @@ public class StravaController : ControllerBase
     private readonly StravaAuthService _stravaAuth;
     private readonly StravaConnectionService _connections;
     private readonly StravaApiService _stravaApi;
+    private readonly StravaSyncService _sync;
 
     public StravaController(
         AppDbContext db,
         StravaAuthService stravaAuth,
         StravaConnectionService connections,
-        StravaApiService stravaApi)
+        StravaApiService stravaApi,
+        StravaSyncService sync)
     {
         _db = db;
         _stravaAuth = stravaAuth;
         _connections = connections;
         _stravaApi = stravaApi;
+        _sync = sync;
     }
 
     // GET /api/strava/connect
@@ -141,6 +144,33 @@ public class StravaController : ControllerBase
                 perPage,
                 count = activities.Count,
                 activities
+            });
+        }
+        catch (StravaAuthException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST /api/strava/sync?maxPages=3
+    // Strava'dan aktiviteleri ceker ve veritabanina kaydeder.
+    [HttpPost("sync")]
+    public async Task<IActionResult> Sync(
+        [FromQuery] int maxPages = 3,
+        CancellationToken ct = default)
+    {
+        if (maxPages < 1 || maxPages > 50) maxPages = 3;
+
+        try
+        {
+            var result = await _sync.SyncAsync(maxPages, ct);
+
+            return Ok(new
+            {
+                status = "synced",
+                added = result.Added,
+                updated = result.Updated,
+                pagesFetched = result.PagesFetched
             });
         }
         catch (StravaAuthException ex)
