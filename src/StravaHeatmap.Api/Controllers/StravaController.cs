@@ -14,11 +14,19 @@ public class StravaController : ControllerBase
 
     private readonly AppDbContext _db;
     private readonly StravaAuthService _stravaAuth;
+    private readonly StravaConnectionService _connections;
+    private readonly StravaApiService _stravaApi;
 
-    public StravaController(AppDbContext db, StravaAuthService stravaAuth)
+    public StravaController(
+        AppDbContext db,
+        StravaAuthService stravaAuth,
+        StravaConnectionService connections,
+        StravaApiService stravaApi)
     {
         _db = db;
         _stravaAuth = stravaAuth;
+        _connections = connections;
+        _stravaApi = stravaApi;
     }
 
     // GET /api/strava/connect
@@ -102,6 +110,37 @@ public class StravaController : ControllerBase
                 athleteId = connection.AthleteId,
                 athleteName = connection.AthleteName,
                 expiresAt = connection.ExpiresAt
+            });
+        }
+        catch (StravaAuthException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // GET /api/strava/activities?page=1&perPage=30
+    // Token gerekirse otomatik yenilenir, sonra Strava'dan aktiviteler çekilir.
+    [HttpGet("activities")]
+    public async Task<IActionResult> GetActivities(
+        [FromQuery] int page = 1,
+        [FromQuery] int perPage = 30,
+        CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (perPage < 1 || perPage > 200) perPage = 30;
+
+        try
+        {
+            var connection = await _connections.GetConnectionWithValidTokenAsync(ct);
+            var activities = await _stravaApi.GetActivitiesAsync(
+                connection.AccessToken, page, perPage, ct);
+
+            return Ok(new
+            {
+                page,
+                perPage,
+                count = activities.Count,
+                activities
             });
         }
         catch (StravaAuthException ex)

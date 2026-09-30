@@ -23,6 +23,16 @@ builder.Services.AddHttpClient<StravaAuthService>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+// Strava'nın veri uçları için istemci (token uçlarından ayrı).
+builder.Services.AddHttpClient<StravaApiService>(client =>
+{
+    client.BaseAddress = new Uri("https://www.strava.com");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+// Bağlantı ve token yönetimi.
+builder.Services.AddScoped<StravaConnectionService>();
+
 // Oturum: OAuth state değerini kısa süreliğine sunucu tarafında tutmak için.
 // Veri sunucuda kalır, tarayıcıya sadece bir çerez kimliği gider.
 builder.Services.AddDistributedMemoryCache();
