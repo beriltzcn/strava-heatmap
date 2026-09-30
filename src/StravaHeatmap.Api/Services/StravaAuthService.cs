@@ -61,18 +61,31 @@ public class StravaAuthService
     private async Task<StravaTokenResponse> PostTokenRequestAsync(
         Dictionary<string, string> form, CancellationToken ct)
     {
-        using var response = await _httpClient.PostAsync(
-            "/oauth/token", new FormUrlEncodedContent(form), ct);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            var body = await response.Content.ReadAsStringAsync(ct);
-            throw new StravaAuthException(
-                $"Strava token isteği başarısız ({(int)response.StatusCode}): {body}");
+            using var response = await _httpClient.PostAsync(
+                "/oauth/token", new FormUrlEncodedContent(form), ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(ct);
+                throw new StravaAuthException(
+                    $"Strava token isteği başarısız ({(int)response.StatusCode}): {body}");
+            }
+
+            var token = await response.Content.ReadFromJsonAsync<StravaTokenResponse>(ct);
+
+            return token ?? throw new StravaAuthException("Strava boş cevap döndü.");
         }
-
-        var token = await response.Content.ReadFromJsonAsync<StravaTokenResponse>(ct);
-
-        return token ?? throw new StravaAuthException("Strava boş cevap döndü.");
+        catch (HttpRequestException ex)
+        {
+            // Ağ hatası: internet yok, DNS çözülemedi, sertifika sorunu...
+            throw new StravaAuthException($"Strava'ya bağlanılamadı: {ex.Message}");
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // İstek zaman aşımına uğradı (uygulama kapanıyor değil).
+            throw new StravaAuthException("Strava isteği zaman aşımına uğradı.");
+        }
     }
 }

@@ -26,17 +26,30 @@ public class StravaApiService
         // Token'ı başlıkta gönderiyoruz: "Bearer <token>"
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-        using var response = await _httpClient.SendAsync(request, ct);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            var body = await response.Content.ReadAsStringAsync(ct);
-            throw new StravaAuthException(
-                $"Strava aktivite isteği başarısız ({(int)response.StatusCode}): {body}");
+            using var response = await _httpClient.SendAsync(request, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(ct);
+                throw new StravaAuthException(
+                    $"Strava aktivite isteği başarısız ({(int)response.StatusCode}): {body}");
+            }
+
+            var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityDto>>(ct);
+
+            return activities ?? new List<StravaActivityDto>();
         }
-
-        var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityDto>>(ct);
-
-        return activities ?? new List<StravaActivityDto>();
+        catch (HttpRequestException ex)
+        {
+            // Ağ hatası: internet yok, DNS çözülemedi, sertifika sorunu...
+            throw new StravaAuthException($"Strava'ya bağlanılamadı: {ex.Message}");
+        }
+        catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // İstek zaman aşımına uğradı (uygulama kapanıyor değil).
+            throw new StravaAuthException("Strava isteği zaman aşımına uğradı.");
+        }
     }
 }
