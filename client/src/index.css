@@ -1,0 +1,20 @@
+/* Temel ayarlar. Harita tam sayfayi kaplayacagi icin govde bosluklarini sifirliyoruz. */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1f2430;
+  background: #ffffff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
