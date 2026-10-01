@@ -2,7 +2,7 @@
 
 namespace StravaHeatmap.Api.Services;
 
-// Strava'nın /oauth/token cevabının C# karşılığı.
+// C# shape of Strava's /oauth/token response.
 public class StravaTokenResponse
 {
     [JsonPropertyName("access_token")]
@@ -11,14 +11,14 @@ public class StravaTokenResponse
     [JsonPropertyName("refresh_token")]
     public string RefreshToken { get; set; } = "";
 
-    // Strava bunu Unix zaman damgası olarak gönderir (1 Ocak 1970'ten beri geçen saniye).
+    // Strava sends this as a Unix timestamp (seconds since 1 January 1970).
     [JsonPropertyName("expires_at")]
     public long ExpiresAtUnix { get; set; }
 
     [JsonPropertyName("athlete")]
     public StravaAthlete? Athlete { get; set; }
 
-    // Hesaplanmış hâli: okunabilir tarihe çevirir.
+    // Computed property: turns the Unix timestamp into a readable date.
     public DateTimeOffset ExpiresAt => DateTimeOffset.FromUnixTimeSeconds(ExpiresAtUnix);
 }
 

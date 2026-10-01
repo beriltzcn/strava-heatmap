@@ -1,4 +1,4 @@
-/* Temel ayarlar. Harita tam sayfayi kaplayacagi icin govde bosluklarini sifirliyoruz. */
+/* Base styles. The map fills the page, so body margins are reset to zero. */
 * {
   box-sizing: border-box;
 }

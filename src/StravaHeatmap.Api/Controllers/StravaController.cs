@@ -33,11 +33,11 @@ public class StravaController : ControllerBase
     }
 
     // GET /api/strava/connect
-    // Kullaniciyi Strava'nin izin ekranina gonderir.
+    // Sends the user to Strava's authorization screen.
     [HttpGet("connect")]
     public IActionResult Connect()
     {
-        // CSRF korumasi: rastgele bir deger uretip oturumda sakliyoruz.
+        // CSRF protection: generate a random value and keep it in the session.
         var state = Guid.NewGuid().ToString("N");
         HttpContext.Session.SetString(StateSessionKey, state);
 
@@ -46,7 +46,7 @@ public class StravaController : ControllerBase
     }
 
     // GET /api/strava/callback?code=...&state=...&scope=...
-    // Strava, kullanici izin verdikten sonra buraya geri gonderir.
+    // Strava sends the user back here after they approve.
     [HttpGet("callback")]
     public async Task<IActionResult> Callback(
         [FromQuery] string? code,
@@ -54,18 +54,18 @@ public class StravaController : ControllerBase
         [FromQuery] string? error,
         CancellationToken ct)
     {
-        // Kullanici izin ekraninda "Cancel" derse Strava error ile doner.
+        // If the user cancels on the consent screen, Strava returns an error.
         if (!string.IsNullOrEmpty(error))
         {
-            return BadRequest(new { message = $"Strava yetkilendirmeyi reddetti: {error}" });
+            return BadRequest(new { message = $"Strava authorization was denied: {error}" });
         }
 
         if (string.IsNullOrEmpty(code))
         {
-            return BadRequest(new { message = "code parametresi eksik." });
+            return BadRequest(new { message = "The code parameter is missing." });
         }
 
-        // State kontrolu: bu istek gercekten bizim baslattigimiz istek mi?
+        // State check: is this really the request we started?
         var expectedState = HttpContext.Session.GetString(StateSessionKey);
         HttpContext.Session.Remove(StateSessionKey);
 
@@ -73,23 +73,23 @@ public class StravaController : ControllerBase
         {
             return BadRequest(new
             {
-                message = "state dogrulanamadi. Lutfen baglantiyi bastan baslat."
+                message = "State could not be verified. Please start the connection again."
             });
         }
 
         try
         {
-            // Kodu token'a cevir.
+            // Exchange the one-time code for tokens.
             var token = await _stravaAuth.ExchangeCodeAsync(code, ct);
 
             if (token.Athlete is null)
             {
-                return BadRequest(new { message = "Strava cevabinda atlet bilgisi yok." });
+                return BadRequest(new { message = "Strava response did not include athlete information." });
             }
 
             var athleteName = $"{token.Athlete.FirstName} {token.Athlete.LastName}".Trim();
 
-            // Ayni atlet daha once baglandiysa guncelle, yoksa yeni kayit ac.
+            // Update the existing row for this athlete, or create a new one.
             var connection = await _db.StravaConnections
                 .FirstOrDefaultAsync(c => c.AthleteId == token.Athlete.Id, ct);
 
@@ -122,7 +122,7 @@ public class StravaController : ControllerBase
     }
 
     // GET /api/strava/activities?page=1&perPage=30
-    // Token gerekirse otomatik yenilenir, sonra Strava'dan aktiviteler çekilir.
+    // Refreshes the token when needed, then fetches activities straight from Strava.
     [HttpGet("activities")]
     public async Task<IActionResult> GetActivities(
         [FromQuery] int page = 1,
@@ -153,7 +153,7 @@ public class StravaController : ControllerBase
     }
 
     // POST /api/strava/sync?maxPages=3
-    // Strava'dan aktiviteleri ceker ve veritabanina kaydeder.
+    // Fetches activities from Strava and stores them in the database.
     [HttpPost("sync")]
     public async Task<IActionResult> Sync(
         [FromQuery] int maxPages = 3,

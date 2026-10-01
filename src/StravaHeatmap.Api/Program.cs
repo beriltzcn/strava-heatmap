@@ -8,12 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-// Veritabanı bağlantısını tanıt.
+// Register the database connection.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Veri koruma anahtarlari. Docker'da bu klasor kalici bir volume olmali;
-// yoksa konteyner her yeniden basladiginda oturumlar gecersiz olur.
+// Data protection keys. In Docker this folder must live on a persistent volume,
+// otherwise sessions become invalid every time the container restarts.
 var keysPath = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(keysPath))
 {
@@ -21,40 +21,40 @@ if (!string.IsNullOrWhiteSpace(keysPath))
         .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 }
 
-// appsettings.json'daki Strava bölümünü StravaOptions sınıfına bağla.
+// Bind the "Strava" section of appsettings.json to StravaOptions.
 builder.Services.Configure<StravaOptions>(
     builder.Configuration.GetSection(StravaOptions.SectionName));
 
-// Strava ile konuşacak HTTP istemcisi.
-// BaseAddress sayesinde servis içinde "/oauth/token" gibi kısa yollar yazabiliyoruz.
+// HTTP client for Strava's OAuth endpoints.
+// BaseAddress lets the service use short paths like "/oauth/token".
 builder.Services.AddHttpClient<StravaAuthService>(client =>
 {
     client.BaseAddress = new Uri("https://www.strava.com");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Strava'nın veri uçları için istemci (token uçlarından ayrı).
+// Separate client for Strava's data endpoints (longer timeout).
 builder.Services.AddHttpClient<StravaApiService>(client =>
 {
     client.BaseAddress = new Uri("https://www.strava.com");
     client.Timeout = TimeSpan.FromSeconds(60);
 });
 
-// Bağlantı ve token yönetimi.
+// Connection and token management.
 builder.Services.AddScoped<StravaConnectionService>();
 builder.Services.AddScoped<StravaSyncService>();
 
-// Oturum: OAuth state değerini kısa süreliğine sunucu tarafında tutmak için.
-// Veri sunucuda kalır, tarayıcıya sadece bir çerez kimliği gider.
+// Session: keeps the OAuth state value on the server for a short while.
+// The data stays on the server; the browser only gets a cookie identifier.
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(20);
-    options.Cookie.HttpOnly = true;   // JavaScript okuyamasın
+    options.Cookie.HttpOnly = true;   // not readable from JavaScript
     options.Cookie.IsEssential = true;
 });
 
-// Controller'ları tanı: "Controllers klasörüne bak, oradaki sınıfları kullan."
+// Register controllers.
 builder.Services.AddControllers();
 
 var app = builder.Build();
@@ -66,18 +66,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Uretimde React'in derlenmis hali wwwroot klasorunden servis edilir.
-// Gelistirme sirasinda bu klasor bos olur, Vite kendi sunucusunu kullanir.
+// In production the built React app is served from the wwwroot folder.
+// During development that folder is empty and Vite serves the frontend instead.
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Oturum desteğini devreye al. Controller'lardan önce gelmek zorunda.
+// Enable session support. Must run before the endpoints.
 app.UseSession();
 
-// Gelen isteği, adresine göre doğru controller'a yönlendir.
+// Route incoming requests to controllers.
 app.MapControllers();
 
-// API'ye ait olmayan adresler React uygulamasina gitsin (tek sayfa uygulamasi).
+// Anything that is not an API route falls through to the React app (SPA).
 app.MapFallbackToFile("index.html");
 
 app.Run();

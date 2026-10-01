@@ -1,6 +1,6 @@
 ﻿namespace StravaHeatmap.Api.Options;
 
-// appsettings.json'daki "Strava" bölümünün C# karşılığı.
+// C# shape of the "Strava" section in appsettings.json.
 public class StravaOptions
 {
     public const string SectionName = "Strava";

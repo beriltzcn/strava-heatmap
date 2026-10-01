@@ -481,7 +481,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# SQLite veritabanı
+# SQLite database
 *.db
 *.db-shm
 *.db-wal
@@ -490,5 +490,5 @@ $RECYCLE.BIN/
 client/node_modules/
 client/dist/
 
-# Ortam değişkenleri
+# Environment files
 .env

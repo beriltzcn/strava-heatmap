@@ -4,7 +4,7 @@ using StravaHeatmap.Api.Dtos;
 
 namespace StravaHeatmap.Api.Services;
 
-// Strava'nın veri uçları (token uçları değil).
+// Strava's data endpoints (not the token endpoints).
 public class StravaApiService
 {
     private readonly HttpClient _httpClient;
@@ -14,8 +14,8 @@ public class StravaApiService
         _httpClient = httpClient;
     }
 
-    // Kullanıcının aktivitelerini sayfa sayfa çeker.
-    // Strava tek istekte en fazla 200 kayıt verir.
+    // Fetches the athlete's activities, one page at a time.
+    // Strava returns at most 200 records per request.
     public async Task<List<StravaActivityDto>> GetActivitiesAsync(
         string accessToken, int page, int perPage, CancellationToken ct)
     {
@@ -23,7 +23,7 @@ public class StravaApiService
             HttpMethod.Get,
             $"/api/v3/athlete/activities?page={page}&per_page={perPage}");
 
-        // Token'ı başlıkta gönderiyoruz: "Bearer <token>"
+        // Send the token in the Authorization header: "Bearer <token>"
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         try
@@ -34,7 +34,7 @@ public class StravaApiService
             {
                 var body = await response.Content.ReadAsStringAsync(ct);
                 throw new StravaAuthException(
-                    $"Strava aktivite isteği başarısız ({(int)response.StatusCode}): {body}");
+                    $"Strava activities request failed ({(int)response.StatusCode}): {body}");
             }
 
             var activities = await response.Content.ReadFromJsonAsync<List<StravaActivityDto>>(ct);
@@ -43,13 +43,13 @@ public class StravaApiService
         }
         catch (HttpRequestException ex)
         {
-            // Ağ hatası: internet yok, DNS çözülemedi, sertifika sorunu...
-            throw new StravaAuthException($"Strava'ya bağlanılamadı: {ex.Message}");
+            // Network failure: no internet, DNS failure, certificate problem...
+            throw new StravaAuthException($"Could not reach Strava: {ex.Message}");
         }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested)
         {
-            // İstek zaman aşımına uğradı (uygulama kapanıyor değil).
-            throw new StravaAuthException("Strava isteği zaman aşımına uğradı.");
+            // The request timed out (the app itself is not shutting down).
+            throw new StravaAuthException("The Strava request timed out.");
         }
     }
 }

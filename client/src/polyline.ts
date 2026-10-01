@@ -1,10 +1,10 @@
-// Strava'nin gonderdigi "encoded polyline" bicimini koordinatlara cevirir.
+// Decodes Strava's "encoded polyline" format into coordinates.
 //
-// Mantik sudur: Strava, rota noktalarini ardisik farklar (delta) olarak
-// ve her sayiyi 5 bitlik parcalara bolerek tek bir metne sigdirir.
-// Asagidaki dongu bu metni cozup [enlem, boylam] ciftleri uretir.
+// The idea: Strava stores route points as consecutive differences (deltas),
+// and packs each number into 5-bit chunks so the whole route fits in one string.
+// The loop below unpacks that string into [latitude, longitude] pairs.
 //
-// Bicim Google tarafindan tanimlanmistir ve bir cok harita servisi kullanir.
+// The format was defined by Google and is used by many map services.
 export function decodePolyline(encoded: string): [number, number][] {
   const points: [number, number][] = []
 
@@ -13,7 +13,7 @@ export function decodePolyline(encoded: string): [number, number][] {
   let lng = 0
 
   while (index < encoded.length) {
-    // 1) Enlem farkini oku
+    // 1) Read the latitude delta
     let result = 0
     let shift = 0
     let byte: number
@@ -24,10 +24,10 @@ export function decodePolyline(encoded: string): [number, number][] {
       shift += 5
     } while (byte >= 0x20)
 
-    // En dusuk bit isaret bitidir; kalan bitler buyuklugu verir.
+    // The lowest bit is the sign; the remaining bits hold the magnitude.
     lat += result & 1 ? ~(result >> 1) : result >> 1
 
-    // 2) Boylam farkini oku
+    // 2) Read the longitude delta
     result = 0
     shift = 0
 
@@ -39,7 +39,7 @@ export function decodePolyline(encoded: string): [number, number][] {
 
     lng += result & 1 ? ~(result >> 1) : result >> 1
 
-    // Strava 5 ondalik basamak hassasiyet kullanir: 1e5 = 100000
+    // Strava keeps five decimal places of precision: 1e5 = 100000
     points.push([lat / 1e5, lng / 1e5])
   }
 

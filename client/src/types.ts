@@ -1,4 +1,4 @@
-// Backend'in /api/activities ucundan donen verinin sekli.
+// Shape of the data returned by the backend's /api/activities endpoint.
 
 export interface ActivitySummary {
   id: number
@@ -17,7 +17,7 @@ export interface ActivitiesResponse {
   activities: ActivitySummary[]
 }
 
-// Haritada cizilecek tek bir rota.
+// A single route ready to be drawn on the map.
 export interface RouteLine {
   id: number
   points: [number, number][]

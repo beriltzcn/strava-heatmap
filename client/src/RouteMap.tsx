@@ -6,7 +6,7 @@ import HeatLayer from './HeatLayer'
 
 export type MapMode = 'routes' | 'heat'
 
-// Rotalarin tamami ekrana sigsin diye haritayi otomatik ayarlar.
+// Automatically fits the map so every route is visible.
 function FitBounds({ routes }: { routes: RouteLine[] }) {
   const map = useMap()
 
@@ -28,18 +28,18 @@ interface Props {
 }
 
 export default function RouteMap({ routes, mode }: Props) {
-  // Heatmap icin butun rotalarin noktalarini tek listede topluyoruz.
+  // Collect every route's points into one list for the heatmap.
   const allPoints = useMemo(() => routes.flatMap((route) => route.points), [routes])
 
   return (
     <MapContainer
-      center={[41.01, 28.98]} // Istanbul; rotalar gelince otomatik ayarlanacak
+      center={[41.01, 28.98]} // Istanbul; fitBounds takes over once routes load
       zoom={11}
       style={{ height: '100%', width: '100%' }}
     >
-      {/* Harita karolari. OpenStreetMap ucretsizdir ama atif zorunludur. */}
+      {/* Map tiles. OpenStreetMap is free, but attribution is required. */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkida bulunanlar'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 

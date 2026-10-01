@@ -5,7 +5,7 @@ using StravaHeatmap.Api.Models;
 
 namespace StravaHeatmap.Api.Services;
 
-// Senkronizasyon sonucunun ozeti.
+// Summary of a single sync run.
 public record SyncResult(int Added, int Updated, int PagesFetched);
 
 public class StravaSyncService
@@ -42,14 +42,15 @@ public class StravaSyncService
             var batch = await _stravaApi.GetActivitiesAsync(
                 connection.AccessToken, page, PerPage, ct);
 
-            // Strava veri bitince bos liste doner.
+            // Strava returns an empty list once there is no more data.
             if (batch.Count == 0)
             {
                 break;
             }
 
-            // Bu sayfadaki aktivitelerden hangileri zaten kayitli?
-            // Hepsini tek sorguda bulup sozluge koyuyoruz (N+1 sorgusundan kacinma).
+            // Which activities on this page do we already have?
+            // Look them all up in a single query and put them in a dictionary,
+            // which avoids the classic N+1 query problem.
             var stravaIds = batch.Select(a => a.Id).ToList();
 
             var existing = await _db.Activities
@@ -75,9 +76,9 @@ public class StravaSyncService
 
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("Sayfa {Page}: {Count} aktivite islendi.", page, batch.Count);
+            _logger.LogInformation("Processed page {Page}: {Count} activities.", page, batch.Count);
 
-            // Son sayfaya geldiysek devam etmenin anlami yok.
+            // Reached the last page; there is nothing more to fetch.
             if (batch.Count < PerPage)
             {
                 break;
@@ -89,7 +90,7 @@ public class StravaSyncService
         return new SyncResult(added, updated, page);
     }
 
-    // Strava'dan gelen veriyi bizim tabloya aktarir.
+    // Copies the Strava data onto our own entity.
     private static void Apply(StravaActivityDto dto, Activity activity)
     {
         activity.StravaActivityId = dto.Id;

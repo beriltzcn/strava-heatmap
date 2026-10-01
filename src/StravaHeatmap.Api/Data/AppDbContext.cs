@@ -19,12 +19,12 @@ public class AppDbContext : DbContext
             .HasIndex(c => c.AthleteId)
             .IsUnique();
 
-        // Ayni Strava aktivitesi iki kez kaydedilmesin.
+        // The same Strava activity must not be stored twice.
         modelBuilder.Entity<Activity>()
             .HasIndex(a => a.StravaActivityId)
             .IsUnique();
 
-        // Bir baglanti silinirse aktiviteleri de silinsin.
+        // Deleting a connection also deletes its activities.
         modelBuilder.Entity<Activity>()
             .HasOne(a => a.Connection)
             .WithMany()

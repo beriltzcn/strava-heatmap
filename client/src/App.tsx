@@ -13,7 +13,7 @@ function App() {
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  // Sadece rotasi olanlari istiyoruz; rotasizlari haritada cizemeyiz.
+  // Only activities with GPS data; the rest cannot be drawn on the map.
   const loadActivities = useCallback(async () => {
     const res = await fetch('/api/activities?onlyWithRoute=true&limit=200')
     if (!res.ok) throw new Error(`Backend error: HTTP ${res.status}`)
@@ -21,14 +21,14 @@ function App() {
     setActivities(data.activities)
   }, [])
 
-  // Bilesen ekrana geldiginde bir kez calisir.
+  // Runs once when the component first appears.
   useEffect(() => {
     loadActivities()
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false))
   }, [loadActivities])
 
-  // Strava'dan yeni aktiviteleri cekip veritabanina kaydeder.
+  // Fetches the latest activities from Strava and stores them in the database.
   async function handleSync() {
     setSyncing(true)
     setMessage(null)
@@ -44,7 +44,7 @@ function App() {
       const data = await res.json()
       setMessage(`${data.added} added, ${data.updated} updated`)
 
-      // Yeni veri geldiyse haritayi tazele.
+      // New data may have arrived, so refresh the map.
       await loadActivities()
     } catch (err) {
       setMessage(`Error: ${(err as Error).message}`)
@@ -53,7 +53,7 @@ function App() {
     }
   }
 
-  // Polylinelari bir kez cozup hazir tutuyoruz.
+  // Decode the polylines once and keep the result.
   const routes = useMemo(
     () =>
       activities

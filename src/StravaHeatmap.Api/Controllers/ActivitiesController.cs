@@ -31,10 +31,11 @@ public class ActivitiesController : ControllerBase
             query = query.Where(a => a.SummaryPolyline != null && a.SummaryPolyline != "");
         }
 
-        // NOT: SQLite, DateTimeOffset tipindeki alanlarda ORDER BY'i desteklemiyor.
-        // Bu yuzden siralama ve limit islemini veritabaninda degil bellekte yapiyoruz.
-        // Kisisel kullanimda aktivite sayisi binlerle ifade edildigi icin bu bedava;
-        // ileride cok buyurse semayi degistirip (UTC DateTime veya long) SQL'e tasiriz.
+        // NOTE: SQLite cannot translate ORDER BY on DateTimeOffset columns.
+        // So we sort and limit in memory instead of in the database.
+        // For personal use (thousands of activities) the cost is negligible;
+        // if the dataset grows a lot we can change the column type (UTC DateTime
+        // or a long) and move this back into SQL.
         var rows = await query
             .Select(a => new
             {
