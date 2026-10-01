@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using StravaHeatmap.Api.Data;
 using StravaHeatmap.Api.Options;
@@ -10,6 +11,15 @@ builder.Services.AddOpenApi();
 // Veritabanı bağlantısını tanıt.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Veri koruma anahtarlari. Docker'da bu klasor kalici bir volume olmali;
+// yoksa konteyner her yeniden basladiginda oturumlar gecersiz olur.
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(keysPath))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
 
 // appsettings.json'daki Strava bölümünü StravaOptions sınıfına bağla.
 builder.Services.Configure<StravaOptions>(
@@ -56,10 +66,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Uretimde React'in derlenmis hali wwwroot klasorunden servis edilir.
+// Gelistirme sirasinda bu klasor bos olur, Vite kendi sunucusunu kullanir.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Oturum desteğini devreye al. Controller'lardan önce gelmek zorunda.
 app.UseSession();
 
 // Gelen isteği, adresine göre doğru controller'a yönlendir.
 app.MapControllers();
+
+// API'ye ait olmayan adresler React uygulamasina gitsin (tek sayfa uygulamasi).
+app.MapFallbackToFile("index.html");
 
 app.Run();

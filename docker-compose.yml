@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Degerler .env dosyasindan okunur (.env.example dosyasini kopyalayin).
+      Strava__ClientId: ${STRAVA_CLIENT_ID}
+      Strava__ClientSecret: ${STRAVA_CLIENT_SECRET}
+      Strava__RedirectUri: ${STRAVA_REDIRECT_URI:-http://localhost:8080/api/strava/callback}
+
+      # Veritabani ve anahtarlar volume icinde tutulur, konteyner silinse de kaybolmaz.
+      ConnectionStrings__DefaultConnection: "Data Source=/data/stravaheatmap.db"
+      DataProtection__KeysPath: "/data/keys"
+    volumes:
+      - stravaheatmap-data:/data
+    restart: unless-stopped
+
+volumes:
+  stravaheatmap-data:
