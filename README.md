@@ -18,7 +18,7 @@ database, and no third party sees it.
 
 ## Screenshot
 
-_Coming soon._
+<img width="2012" height="1663" alt="image" src="https://github.com/user-attachments/assets/e6fac38d-4ee3-47cd-9412-5ed4197a0818" />
 
 ## Requirements
 
